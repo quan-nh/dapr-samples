@@ -1,7 +1,7 @@
-DOCKER_IMAGE_PREFIX ?=hello-k8s-
-APPS                ?=node python
+DOCKER_IMAGE_PREFIX ?=dapr-k8s-
+APPS                ?=clj python
 
-SAMPLE_REGISTRY     ?=docker.io/dapriosamples
+SAMPLE_REGISTRY     ?=docker.io/huu2uan
 SAMPLE_VERSION      ?=latest
 
 # Docker image build and push setting

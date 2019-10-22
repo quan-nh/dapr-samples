@@ -40,77 +40,46 @@ component.dapr.io "statestore" configured
 
 Now that we've setup Dapr and state, let's take a look at our services. Clone the sample repository:
 ```bash
-git clone https://github.com/dapr/samples.git
+git clone https://github.com/quan-nh/dapr-samples.git
 ```
 
- Navigate to the Node.js app in the Kubernetes sample: `cd samples/2.hello-kubernetes/node`.
+ Navigate to the Clojure app in the Kubernetes sample: `cd samples/2.hello-kubernetes/clj`.
 
-In the `app.js` you'll find a simple `express` application, which exposes a few routes and handlers.
+In the `src/hello_world/core.clj` you'll find a simple `ring` application, which exposes a few routes and handlers.
 
 Let's take a look at the ```neworder``` handler:
 
-```js
-app.post('/neworder', (req, res) => {
-    const data = req.body.data;
-    const orderId = data.orderId;
-    console.log("Got a new order! Order ID: " + orderId);
-
-    const state = [{
-        key: "order",
-        value: data
-    }];
-
-    fetch(`${daprUrl}/state`, {
-        method: "POST",
-        body: JSON.stringify(state),
-        headers: {
-            "Content-Type": "application/json"
-        }
-    }).then((response) => {
-        console.log((response.ok) ? "Successfully persisted state" : "Failed to persist state");
-    });
-
-    res.status(200).send();
-});
+```clj
+(POST "/neworder" {{:keys [data]} :body-params}
+  (println "Got a new order! Order ID:" (:orderId data))
+  (http/post state-url
+             {:headers {"Content-Type" "application/json"}
+              :body (json/write-value-as-string [{:key "order"
+                                                  :value data}])}
+             (fn [{:keys [error]}]
+               (if error
+                 (println "Failed to persist state, exception is " error)
+                 (println "Successfully persisted state")))))
 ```
 
 Here we're exposing an endpoint that will receive and handle `neworder` messages. We first log the incoming message, and then persist the order ID to our Redis store by posting a state array to the `/state` endpoint.
 
-Alternatively, we could have persisted our state by simply returning it with our response object:
-
-```js
-res.json({
-        state: [{
-            key: "order",
-            value: order
-        }]
-    })
-```
-
-We chose to avoid this approach, as it doesn't allow us to verify if our message successfully persisted.
-
 We also expose a GET endpoint, `/order`:
 
 ```js
-app.get('/order', (_req, res) => {
-    fetch(`${daprUrl}/state/order`)
-        .then((response) => {
-            return response.json();
-        }).then((orders) => {
-            res.send(orders);
-        });
-});
+(GET "/order" []
+  (:body @(http/get (str state-url "/order"))))
 ```
 
-This calls out to our Redis cache to grab the latest value of the "order" key, which effectively allows our Node.js app to be _stateless_. 
+This calls out to our Redis cache to grab the latest value of the "order" key, which effectively allows our Clojure app to be _stateless_. 
 
-## Step 4 - Deploy the Node.js App with the Dapr Sidecar
+## Step 4 - Deploy the Clojure App with the Dapr Sidecar
 
 ```
 kubectl apply -f ../deploy/node.yaml
 ```
 
-This will deploy our Node.js app to Kubernetes. The Dapr control plane will automatically inject the Dapr sidecar to our Pod. If you take a look at the ```node.yaml``` file, you will see how Dapr is enabled for that deployment:
+This will deploy our Clojure app to Kubernetes. The Dapr control plane will automatically inject the Dapr sidecar to our Pod. If you take a look at the ```node.yaml``` file, you will see how Dapr is enabled for that deployment:
 
 ```dapr.io/enabled: true``` - this tells the Dapr control plane to inject a sidecar to this deployment.
 
@@ -137,7 +106,7 @@ export NODE_APP=$(kubectl get svc nodeapp --output 'jsonpath={.status.loadBalanc
 ## Step 5 - Deploy the Python App with the Dapr Sidecar
 Next, let's take a quick look at our python app. Navigate to the python app in the kubernetes sample: `cd samples/2.hello-kubernetes/python` and open `app.py`.
 
-At a quick glance, this is a basic python app that posts JSON messages to `localhost:3500`, which is the default listening port for Dapr. We invoke our Node.js application's `neworder` endpoint by posting to `v1.0/invoke/nodeapp/method/neworder`. Our message contains some `data` with an orderId that increments once per second:
+At a quick glance, this is a basic python app that posts JSON messages to `localhost:3500`, which is the default listening port for Dapr. We invoke our Clojure application's `neworder` endpoint by posting to `v1.0/invoke/nodeapp/method/neworder`. Our message contains some `data` with an orderId that increments once per second:
 
 ```python
 n = 0
@@ -166,8 +135,8 @@ kubectl get pods --selector=app=python -w
 
 ## Step 6 - Observe Messages
 
-Now that we have our Node.js and python applications deployed, let's watch messages come through.<br>
-Get the logs of our Node.js app:
+Now that we have our Clojure and Python applications deployed, let's watch messages come through.<br>
+Get the logs of our Clojure app:
 
 ```
 kubectl logs --selector=app=node -c node
@@ -186,7 +155,7 @@ Successfully persisted state
 
 ## Step 7 - Confirm Successful Persistence
 
-Hit the Node.js app's order endpoint to get the latest order. Grab the external IP address that we saved before and, append "/order" and perform a GET request against it (enter it into your browser, use Postman, or curl it!):
+Hit the Clojure app's order endpoint to get the latest order. Grab the external IP address that we saved before and, append "/order" and perform a GET request against it (enter it into your browser, use Postman, or curl it!):
 
 ```
 curl $NODE_APP/order
@@ -207,7 +176,7 @@ This will spin down each resource defined by the .yaml files in the `deploy` dir
 
 ## Next Steps
 
-Now that you're successfully working with Dapr, you probably want to update the sample code to fit your scenario. The Node.js and Python apps that make up this sample are deployed from container images hosted on a private [Azure Container Registry](https://azure.microsoft.com/en-us/services/container-registry/). To create new images with updated code, you'll first need to install docker on your machine. Next, follow these steps:
+Now that you're successfully working with Dapr, you probably want to update the sample code to fit your scenario. The Clojure and Python apps that make up this sample are deployed from container images hosted on a private [Azure Container Registry](https://azure.microsoft.com/en-us/services/container-registry/). To create new images with updated code, you'll first need to install docker on your machine. Next, follow these steps:
 
 1. Update Node or Python code as you see fit!
 2. Navigate to the directory of the app you want to build a new image for.
