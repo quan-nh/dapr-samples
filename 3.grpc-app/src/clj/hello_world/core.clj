@@ -4,15 +4,25 @@
             [jsonista.core :as json]
             [muuntaja.middleware :as mw]
             [org.httpkit.server :refer [run-server]]
-            [org.httpkit.client :as http]))
+            [org.httpkit.client :as http])
+  (:import (io.dapr DaprGrpc DaprProtos$GetStateEnvelope)
+           (io.grpc ManagedChannelBuilder)))
 
-(def dapr-port (or (System/getenv "DAPR_HTTP_PORT") 3500))
+(def dapr-port (System/getenv "DAPR_GRPC_PORT"))
 (def state-url (str "http://localhost:" dapr-port "/v1.0/state"))
+
+(def client (DaprGrpc/newBlockingStub
+              (-> (ManagedChannelBuilder/forAddress "localhost" (Integer/valueOf dapr-port))
+                  (.usePlaintext true)
+                  .build)))
 
 (defroutes app-routes
   (GET "/order" []
-    (:body @(http/get (str state-url "/order"))))
-  
+    (let [resp (.getState client (-> (DaprProtos$GetStateEnvelope/newBuilder)
+                                           (.setKey "order")
+                                           .build))]
+    (-> resp .getData .getValue .toStringUtf8)))
+
   (POST "/neworder" {{:keys [data]} :body-params}
     (println "Got a new order! Order ID:" (:orderId data))
     (http/post state-url

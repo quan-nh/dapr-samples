@@ -61,7 +61,7 @@ This calls out to our Redis cache to grab the latest value of the "order" key, w
 
 ## Step 3 - Run the App with Dapr
 
-1. Run app with Dapr: `dapr run --app-id mynode --app-port 3000 --port 3500 lein run`. This should output text that looks like the following, along with logs:
+1. Run app with Dapr: `dapr run --grpc-port 50001 --app-id mynode --app-port 3000 --port 3500 lein run`. This should output text that looks like the following, along with logs:
 
 ```
 Starting Dapr with id mynode on port 3500
