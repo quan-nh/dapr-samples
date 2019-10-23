@@ -8,7 +8,7 @@ This repository contains a series of samples that highlight Dapr capabilities. T
 |--------------------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | [1.hello-world](./1.hello-world)            | Demonstrates how to run Dapr locally. Highlights service invocation and state management.                                                                                                      |
 | [2.hello-kubernetes](./2.hello-kubernetes)       | Demonstrates how to run Dapr in Kubernetes. Highlights service invocation and state management.                                                                                                |
-| [3.grpc-app](./3.grpc-app) | Demonstrates a distributed calculator application that uses Dapr services to power a React web app. Highlights polyglot (multi-language) programming, service invocation and state management. |
+| [3.grpc-app](./3.grpc-app) | Demonstrates grpc app. |
 | [4.pub-sub](./4.pub-sub)                | Demonstrates how we use Dapr to enable pub-sub applications. Uses Redis as a pub-sub component.                                                                                          |
 | [5.bindings](./5.bindings)            | Demonstrates how we use Dapr to create input and output bindings to other components. Uses bindings to Kafka.                                                                            |
 | [6.functions-and-keda](./6.functions-and-keda) | Demonstrates use of Dapr pub/sub from Azure Functions, as well as composition with KEDA. |

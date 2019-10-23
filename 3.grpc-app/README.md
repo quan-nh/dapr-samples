@@ -61,7 +61,7 @@ This calls out to our Redis cache to grab the latest value of the "order" key, w
 
 ## Step 3 - Run the App with Dapr
 
-1. Run app with Dapr: `dapr run --grpc-port 50001 --app-id mynode --app-port 3000 --port 3500 lein run`. This should output text that looks like the following, along with logs:
+1. Run app with Dapr: `dapr run --app-id mynode --app-port 4000 --protocol grpc --grpc-port 5001 lein run`. This should output text that looks like the following, along with logs:
 
 ```
 Starting Dapr with id mynode on port 3500
@@ -108,7 +108,7 @@ In your terminal window, you should see logs indicating that the message was rec
 Now, let's just make sure that our order was successfully persisted to our state store. Create a GET request against: `http://localhost:3500/v1.0/invoke/mynode/method/order`. **Note**: Again, be sure to reflect the right port if you chose a port other than 3500.
 
 ```sh
-curl http://localhost:3500/v1.0/invoke/mynode/method/order
+grpcurl -import-path src/proto -proto dapr.proto -d '{"id": "mynode", "method": "order"}' -plaintext localhost:5001 dapr.Dapr/InvokeService
 ```
 
 or using the Visual Studio Code [Rest Client Plugin](https://marketplace.visualstudio.com/items?itemName=humao.rest-client)
